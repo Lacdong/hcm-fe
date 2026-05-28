@@ -8,28 +8,17 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-2.0-flash-lite", // thay the gemini-1.5-flash da bi remove
+  "gemini-1.5-flash",
 ];
 
 // OpenRouter models thu lan luot khi Gemini that bai hoan toan
 const OPENROUTER_MODELS = [
-  "google/gemma-4-31b:free",      // Ho tro 140+ ngon ngu, tot nhat cho tieng Viet
-  "deepseek/deepseek-v4-flash:free", // Manh, 1M context
-  "z-ai/glm-4.5-air:free",
-  "nvidia/nemotron-3-super-120b-a12b:free",       // Tot cho ngon ngu chau A
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "mistralai/mistral-7b-instruct:free",
 ];
 
 function jsonResponse(status, payload) {
   return Response.json(payload, { status });
-}
-
-// Loai bo ky tu la: chi giu lai Unicode Latin, tieng Viet, dau cau, so, xuat dong
-function sanitizeAnswer(text) {
-  return text
-    // Giu: Latin + dau viet + cac dau cau pho bien + khoang trang + so
-    .replace(/[^\u0000-\u007F\u00C0-\u024F\u1E00-\u1EFF\u0300-\u036F\n\r\t !"#%&'()*+,\-./:;<=>?@[\\\]^_`{|}~0-9]/g, "")
-    .replace(/\n{3,}/g, "\n\n") // gop nhieu dong trong lai
-    .trim();
 }
 
 function isTransientError(error, httpStatus) {
@@ -60,17 +49,11 @@ async function tryGemini(geminiApiKey, prompt) {
       console.log(`[Gemini] Success with ${model}`);
       return result.text;
     } catch (error) {
-      const status = error?.status;
-      const msg = String(error?.message || "");
-
-      // Model bi xoa/khong con ho tro → bo qua, thu model tiep theo
-      const isModelGone = status === 404 || msg.includes("not found") || msg.includes("not supported");
-
-      if (isTransientError(error, status) || isModelGone) {
-        console.warn(`[Gemini] ${model} unavailable (${status}), trying next...`);
+      if (isTransientError(error, error?.status)) {
+        console.warn(`[Gemini] ${model} unavailable (${error?.status}), trying next...`);
         continue;
       }
-      // Loi nghiem trong that su (key sai,...) → dung luon
+      // Loi nghiem trong (key sai,...) → dung luon, khong thu model khac
       console.error(`[Gemini] Fatal error on ${model}`, error);
       return null;
     }
@@ -140,13 +123,11 @@ export default {
 
     const prompt = `${aiSystemContext}
 
-QUAN TRONG: Ban PHAI tra loi HOAN TOAN bang TIENG VIET. Tuyet doi khong dung tieng Anh hay bat ky ngon ngu nao khac.
-
 Cau hoi cua nguoi dung:
 ${question}
 
-Yeu cau tra loi (bat buoc):
-- Ngon ngu: TIENG VIET (bat buoc, khong duoc dung tieng Anh, tieng trung, tieng nhat v.v).
+Yeu cau tra loi:
+- Tra loi bang tieng Viet.
 - Trinh bay ngan gon, ro y.
 - Uu tien gach dau dong neu cau tra loi co nhieu y.
 - Khong tra loi lan man.
@@ -161,6 +142,6 @@ Yeu cau tra loi (bat buoc):
       return jsonResponse(503, { error: "Tat ca AI dang qua tai hoac gap loi, vui long thu lai sau." });
     }
 
-    return jsonResponse(200, { answer: sanitizeAnswer(answer) });
+    return jsonResponse(200, { answer });
   },
 };
