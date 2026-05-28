@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  color: #292524;
+  background-color: #f7f1e5;
+
+  --color-bg-main: #f7f1e5;
+  --color-bg-light: #fffaf0;
+  --color-red-dark: #450a0a;
+  --color-red-main: #7f1d1d;
+  --color-red-soft: #991b1b;
+  --color-gold-main: #b8860b;
+  --color-gold-soft: #d6a738;
+  --color-text-main: #292524;
+  --color-text-muted: #57534e;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f7f1e5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+}
+
+::selection {
+  background-color: #7f1d1d;
+  color: #fff7ed;
+}
+
+.section-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.section-padding {
+  padding-top: 96px;
+  padding-bottom: 96px;
+}
+
+.gold-divider {
+  width: 80px;
+  height: 3px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7f1d1d, #d6a738);
+}
+
+.card-soft {
+  border: 1px solid rgba(184, 134, 11, 0.22);
+  background-color: rgba(255, 250, 240, 0.85);
+  box-shadow: 0 18px 45px rgba(69, 26, 3, 0.08);
+}
+
+.bg-paper {
+  background:
+    radial-gradient(circle at top left, rgba(214, 167, 56, 0.15), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(127, 29, 29, 0.12), transparent 40%),
+    #f7f1e5;
+}
