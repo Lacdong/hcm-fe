@@ -8,14 +8,15 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
+  "gemini-2.0-flash-lite", // thay the gemini-1.5-flash da bi remove
 ];
 
 // OpenRouter models thu lan luot khi Gemini that bai hoan toan
 const OPENROUTER_MODELS = [
   "google/gemma-4-31b:free",      // Ho tro 140+ ngon ngu, tot nhat cho tieng Viet
   "deepseek/deepseek-v4-flash:free", // Manh, 1M context
-  "z-ai/glm-4.5-air:free",        // Tot cho ngon ngu chau A
+  "z-ai/glm-4.5-air:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",       // Tot cho ngon ngu chau A
 ];
 
 function jsonResponse(status, payload) {
@@ -59,11 +60,17 @@ async function tryGemini(geminiApiKey, prompt) {
       console.log(`[Gemini] Success with ${model}`);
       return result.text;
     } catch (error) {
-      if (isTransientError(error, error?.status)) {
-        console.warn(`[Gemini] ${model} unavailable (${error?.status}), trying next...`);
+      const status = error?.status;
+      const msg = String(error?.message || "");
+
+      // Model bi xoa/khong con ho tro → bo qua, thu model tiep theo
+      const isModelGone = status === 404 || msg.includes("not found") || msg.includes("not supported");
+
+      if (isTransientError(error, status) || isModelGone) {
+        console.warn(`[Gemini] ${model} unavailable (${status}), trying next...`);
         continue;
       }
-      // Loi nghiem trong (key sai,...) → dung luon, khong thu model khac
+      // Loi nghiem trong that su (key sai,...) → dung luon
       console.error(`[Gemini] Fatal error on ${model}`, error);
       return null;
     }
