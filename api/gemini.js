@@ -13,8 +13,9 @@ const GEMINI_MODELS = [
 
 // OpenRouter models thu lan luot khi Gemini that bai hoan toan
 const OPENROUTER_MODELS = [
-  "qwen/qwen3-8b:free",
-  "mistralai/mistral-7b-instruct:free",
+  "google/gemma-4-31b:free",      // Ho tro 140+ ngon ngu, tot nhat cho tieng Viet
+  "deepseek/deepseek-v4-flash:free", // Manh, 1M context
+  "z-ai/glm-4.5-air:free",        // Tot cho ngon ngu chau A
 ];
 
 function jsonResponse(status, payload) {
