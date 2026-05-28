@@ -18,62 +18,58 @@ function stripEnvValueQuotes(value) {
   return trimmedValue;
 }
 
-function readApiKeyFromFile(filePath) {
-  if (!existsSync(filePath)) return undefined;
+// Doc tat ca bien moi truong tu file .env
+function readEnvFile(filePath) {
+  if (!existsSync(filePath)) return {};
 
+  const result = {};
   const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
 
   for (const line of lines) {
     const trimmedLine = line.trim();
-
     if (!trimmedLine || trimmedLine.startsWith("#")) continue;
 
-    const match = /^(?:export\s+)?OPENROUTER_API_KEY\s*=\s*(.*)$/.exec(trimmedLine);
-
+    const match = /^(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)$/.exec(trimmedLine);
     if (match) {
-      return stripEnvValueQuotes(match[1]);
+      result[match[1]] = stripEnvValueQuotes(match[2]);
     }
   }
 
-  return undefined;
+  return result;
 }
 
-function getLocalApiKey(mode) {
+function getLocalApiKeys(mode) {
   const envFiles = [
     ".env",
     ".env.local",
     `.env.${mode}`,
     `.env.${mode}.local`,
   ];
-  let hasEnvFileKey = false;
-  let apiKey = "";
+
+  let keys = {};
 
   for (const envFile of envFiles) {
-    const value = readApiKeyFromFile(resolve(process.cwd(), envFile));
-
-    if (value !== undefined) {
-      hasEnvFileKey = true;
-      apiKey = value;
-    }
+    const parsed = readEnvFile(resolve(process.cwd(), envFile));
+    keys = { ...keys, ...parsed };
   }
 
-  if (hasEnvFileKey) {
-    return apiKey.trim();
-  }
-
-  return String(process.env.OPENROUTER_API_KEY || "").trim();
+  return {
+    geminiApiKey: keys.GEMINI_API_KEY || process.env.GEMINI_API_KEY || "",
+    openRouterApiKey: keys.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "",
+  };
 }
 
-function localApiPlugin(apiKey) {
+function localApiPlugin(geminiApiKey, openRouterApiKey) {
   return {
-    name: "local-openrouter-api",
+    name: "local-ai-api",
     configureServer(server) {
       server.middlewares.use("/api/gemini", async (request, response) => {
-        if (apiKey) {
-          process.env.OPENROUTER_API_KEY = apiKey;
-        } else {
-          delete process.env.OPENROUTER_API_KEY;
-        }
+        // Set ca hai keys de handler chinh quyet dinh dung cai nao
+        if (geminiApiKey) process.env.GEMINI_API_KEY = geminiApiKey;
+        else delete process.env.GEMINI_API_KEY;
+
+        if (openRouterApiKey) process.env.OPENROUTER_API_KEY = openRouterApiKey;
+        else delete process.env.OPENROUTER_API_KEY;
 
         const body = await new Promise((resolve, reject) => {
           const chunks = [];
@@ -102,9 +98,9 @@ function localApiPlugin(apiKey) {
 }
 
 export default defineConfig(({ mode }) => {
-  const apiKey = getLocalApiKey(mode);
+  const { geminiApiKey, openRouterApiKey } = getLocalApiKeys(mode);
 
   return {
-    plugins: [react(), tailwindcss(), localApiPlugin(apiKey)],
+    plugins: [react(), tailwindcss(), localApiPlugin(geminiApiKey, openRouterApiKey)],
   };
 });
