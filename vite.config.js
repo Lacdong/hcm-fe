@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-import { devFetch as geminiApi } from "./api/gemini.js";
+import geminiApi from "./api/gemini.js";
 
 function stripEnvValueQuotes(value) {
   const trimmedValue = value.trim();

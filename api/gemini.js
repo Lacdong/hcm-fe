@@ -15,13 +15,8 @@ function getGeminiErrorMessage(error) {
     return "Gemini API key khong hop le hoac chua duoc cap quyen";
   }
 
-  if (
-    message.includes("high demand") ||
-    message.includes("UNAVAILABLE") ||
-    message.includes("RESOURCE_EXHAUSTED") ||
-    message.includes("quota")
-  ) {
-    return "Gemini dang qua tai hoac het quota, vui long thu lai sau";
+  if (message.includes("high demand") || message.includes("UNAVAILABLE")) {
+    return "Gemini dang qua tai, vui long thu lai sau";
   }
 
   return "Gemini request failed";
@@ -51,22 +46,32 @@ function getApiKeyConfigError(apiKey) {
   return "";
 }
 
-async function handleGeminiRequest(apiKey, question) {
-  const apiKeyConfigError = getApiKeyConfigError(apiKey);
-  if (apiKeyConfigError) {
-    return { status: 500, body: { error: apiKeyConfigError } };
-  }
+export default {
+  async fetch(request) {
+    if (request.method !== "POST") {
+      return jsonResponse(405, { error: "Method not allowed" });
+    }
 
-  if (!question) {
-    return { status: 400, body: { error: "Question is required" } };
-  }
+    const apiKey = getGeminiApiKey();
+    const apiKeyConfigError = getApiKeyConfigError(apiKey);
 
-  if (question.length > MAX_QUESTION_LENGTH) {
-    return { status: 400, body: { error: "Question is too long" } };
-  }
+    if (apiKeyConfigError) {
+      return jsonResponse(500, { error: apiKeyConfigError });
+    }
 
-  const ai = new GoogleGenAI({ apiKey });
-  const prompt = `
+    const body = await request.json().catch(() => ({}));
+    const question = String(body.question || "").trim();
+
+    if (!question) {
+      return jsonResponse(400, { error: "Question is required" });
+    }
+
+    if (question.length > MAX_QUESTION_LENGTH) {
+      return jsonResponse(400, { error: "Question is too long" });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const prompt = `
 ${aiSystemContext}
 
 Cau hoi cua nguoi dung:
@@ -80,76 +85,16 @@ Yeu cau tra loi:
 - Neu khong chac chan, hay noi can kiem chung them tu nguon chinh thong.
 `;
 
-  // Thu lan luot tung model, chuyen sang model tiep theo neu bi 503/429
-  const FALLBACK_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-  ];
-
-  let lastError = null;
-
-  for (const model of FALLBACK_MODELS) {
     try {
-      console.log(`Trying model: ${model}`);
-      const result = await ai.models.generateContent({ model, contents: prompt });
-      return { status: 200, body: { answer: result.text } };
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      return jsonResponse(200, { answer: result.text });
     } catch (error) {
-      lastError = error;
-
-      const message = String(error?.message || "");
-      const shouldFallback =
-        message.includes("high demand") ||
-        message.includes("UNAVAILABLE") ||
-        message.includes("RESOURCE_EXHAUSTED") ||
-        message.includes("quota") ||
-        error?.status === 503 ||
-        error?.status === 429;
-
-      if (shouldFallback) {
-        console.warn(`Model ${model} unavailable (${error?.status}), switching to next fallback...`);
-        continue;
-      }
-
-      // Loi khac (key sai, network,...) -> dung ngay
-      console.error(`Gemini request failed on model ${model}`, error);
-      return { status: 502, body: { error: getGeminiErrorMessage(error) } };
+      console.error("Gemini request failed", error);
+      return jsonResponse(502, { error: getGeminiErrorMessage(error) });
     }
-  }
-
-  // Tat ca model deu that bai
-  console.error("All Gemini models failed", lastError);
-  return {
-    status: 503,
-    body: { error: "Tat ca model Gemini dang qua tai hoac het quota, vui long thu lai sau." },
-  };
-}
-
-// ─── Vercel Serverless Function handler (dung khi deploy) ───────────────────
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const question = String(req.body?.question || "").trim();
-  const apiKey = getGeminiApiKey();
-  const { status, body } = await handleGeminiRequest(apiKey, question);
-
-  return res.status(status).json(body);
-}
-
-// ─── Vite dev middleware handler (dung khi chay localhost) ───────────────────
-export const devFetch = {
-  async fetch(request) {
-    if (request.method !== "POST") {
-      return jsonResponse(405, { error: "Method not allowed" });
-    }
-
-    const body = await request.json().catch(() => ({}));
-    const question = String(body.question || "").trim();
-    const apiKey = getGeminiApiKey();
-    const { status, body: resBody } = await handleGeminiRequest(apiKey, question);
-
-    return jsonResponse(status, resBody);
   },
 };
