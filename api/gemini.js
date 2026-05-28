@@ -15,8 +15,13 @@ function getGeminiErrorMessage(error) {
     return "Gemini API key khong hop le hoac chua duoc cap quyen";
   }
 
-  if (message.includes("high demand") || message.includes("UNAVAILABLE")) {
-    return "Gemini dang qua tai, vui long thu lai sau";
+  if (
+    message.includes("high demand") ||
+    message.includes("UNAVAILABLE") ||
+    message.includes("RESOURCE_EXHAUSTED") ||
+    message.includes("quota")
+  ) {
+    return "Gemini dang qua tai hoac het quota, vui long thu lai sau";
   }
 
   return "Gemini request failed";
@@ -75,6 +80,7 @@ Yeu cau tra loi:
 - Neu khong chac chan, hay noi can kiem chung them tu nguon chinh thong.
 `;
 
+  // Thu lan luot tung model, chuyen sang model tiep theo neu bi 503/429
   const FALLBACK_MODELS = [
     "gemini-2.5-flash",
     "gemini-2.0-flash",
@@ -85,30 +91,41 @@ Yeu cau tra loi:
 
   for (const model of FALLBACK_MODELS) {
     try {
+      console.log(`Trying model: ${model}`);
       const result = await ai.models.generateContent({ model, contents: prompt });
       return { status: 200, body: { answer: result.text } };
     } catch (error) {
       lastError = error;
-      const isOverloaded =
-        String(error?.message || "").includes("high demand") ||
-        String(error?.message || "").includes("UNAVAILABLE") ||
-        error?.status === 503;
 
-      if (isOverloaded) {
-        console.warn(`Model ${model} overloaded, switching to next fallback...`);
+      const message = String(error?.message || "");
+      const shouldFallback =
+        message.includes("high demand") ||
+        message.includes("UNAVAILABLE") ||
+        message.includes("RESOURCE_EXHAUSTED") ||
+        message.includes("quota") ||
+        error?.status === 503 ||
+        error?.status === 429;
+
+      if (shouldFallback) {
+        console.warn(`Model ${model} unavailable (${error?.status}), switching to next fallback...`);
         continue;
       }
 
+      // Loi khac (key sai, network,...) -> dung ngay
       console.error(`Gemini request failed on model ${model}`, error);
       return { status: 502, body: { error: getGeminiErrorMessage(error) } };
     }
   }
 
-  console.error("All Gemini models overloaded", lastError);
-  return { status: 503, body: { error: "Tat ca model Gemini dang qua tai, vui long thu lai sau." } };
+  // Tat ca model deu that bai
+  console.error("All Gemini models failed", lastError);
+  return {
+    status: 503,
+    body: { error: "Tat ca model Gemini dang qua tai hoac het quota, vui long thu lai sau." },
+  };
 }
 
-// ─── Vercel Serverless Function handler (dùng khi deploy) ───────────────────
+// ─── Vercel Serverless Function handler (dung khi deploy) ───────────────────
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -121,7 +138,7 @@ export default async function handler(req, res) {
   return res.status(status).json(body);
 }
 
-// ─── Vite dev middleware handler (dùng khi chạy localhost) ───────────────────
+// ─── Vite dev middleware handler (dung khi chay localhost) ───────────────────
 export const devFetch = {
   async fetch(request) {
     if (request.method !== "POST") {
