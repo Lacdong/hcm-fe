@@ -14,7 +14,8 @@ const GEMINI_MODELS = [
 // OpenRouter models - da test, chi giu model con hoat dong
 const OPENROUTER_MODELS = [
  // tested OK
-  "openai/gpt-oss-20b:free",                // tested OK
+  "openai/gpt-oss-20b:free", 
+  "nvidia/nemotron-3-super-120b-a12b:free",               // tested OK
 ];
 
 function jsonResponse(status, payload) {
