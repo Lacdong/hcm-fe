@@ -123,11 +123,13 @@ export default {
 
     const prompt = `${aiSystemContext}
 
+QUAN TRONG: Ban PHAI tra loi HOAN TOAN bang TIENG VIET. Tuyet doi khong dung tieng Anh hay bat ky ngon ngu nao khac.
+
 Cau hoi cua nguoi dung:
 ${question}
 
-Yeu cau tra loi:
-- Tra loi bang tieng Viet.
+Yeu cau tra loi (bat buoc):
+- Ngon ngu: TIENG VIET (bat buoc, khong duoc dung tieng Anh).
 - Trinh bay ngan gon, ro y.
 - Uu tien gach dau dong neu cau tra loi co nhieu y.
 - Khong tra loi lan man.
