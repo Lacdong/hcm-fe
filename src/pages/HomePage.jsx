@@ -1,6 +1,5 @@
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import AIChatSection from "../components/ai/AIChatSection";
 import HeroSection from "../components/sections/HeroSection";
 import BiographySection from "../components/sections/BiographySection";
 import TimelineSection from "../components/sections/TimelineSection";
@@ -30,7 +29,6 @@ function HomePage() {
         <JourneySection />
         <PhilosophySection />
         <MindMapSection />
-        <AIChatSection />
         <CareerSection />
         <IdeologySection />
         <WorksSection />
