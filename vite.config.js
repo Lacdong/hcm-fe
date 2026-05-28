@@ -18,7 +18,7 @@ function stripEnvValueQuotes(value) {
   return trimmedValue;
 }
 
-function readGeminiApiKeyFromFile(filePath) {
+function readApiKeyFromFile(filePath) {
   if (!existsSync(filePath)) return undefined;
 
   const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
@@ -28,7 +28,7 @@ function readGeminiApiKeyFromFile(filePath) {
 
     if (!trimmedLine || trimmedLine.startsWith("#")) continue;
 
-    const match = /^(?:export\s+)?GEMINI_API_KEY\s*=\s*(.*)$/.exec(trimmedLine);
+    const match = /^(?:export\s+)?OPENROUTER_API_KEY\s*=\s*(.*)$/.exec(trimmedLine);
 
     if (match) {
       return stripEnvValueQuotes(match[1]);
@@ -38,7 +38,7 @@ function readGeminiApiKeyFromFile(filePath) {
   return undefined;
 }
 
-function getLocalGeminiApiKey(mode) {
+function getLocalApiKey(mode) {
   const envFiles = [
     ".env",
     ".env.local",
@@ -49,7 +49,7 @@ function getLocalGeminiApiKey(mode) {
   let apiKey = "";
 
   for (const envFile of envFiles) {
-    const value = readGeminiApiKeyFromFile(resolve(process.cwd(), envFile));
+    const value = readApiKeyFromFile(resolve(process.cwd(), envFile));
 
     if (value !== undefined) {
       hasEnvFileKey = true;
@@ -61,18 +61,18 @@ function getLocalGeminiApiKey(mode) {
     return apiKey.trim();
   }
 
-  return String(process.env.GEMINI_API_KEY || "").trim();
+  return String(process.env.OPENROUTER_API_KEY || "").trim();
 }
 
-function localGeminiApiPlugin(geminiApiKey) {
+function localApiPlugin(apiKey) {
   return {
-    name: "local-gemini-api",
+    name: "local-openrouter-api",
     configureServer(server) {
       server.middlewares.use("/api/gemini", async (request, response) => {
-        if (geminiApiKey) {
-          process.env.GEMINI_API_KEY = geminiApiKey;
+        if (apiKey) {
+          process.env.OPENROUTER_API_KEY = apiKey;
         } else {
-          delete process.env.GEMINI_API_KEY;
+          delete process.env.OPENROUTER_API_KEY;
         }
 
         const body = await new Promise((resolve, reject) => {
@@ -102,9 +102,9 @@ function localGeminiApiPlugin(geminiApiKey) {
 }
 
 export default defineConfig(({ mode }) => {
-  const geminiApiKey = getLocalGeminiApiKey(mode);
+  const apiKey = getLocalApiKey(mode);
 
   return {
-    plugins: [react(), tailwindcss(), localGeminiApiPlugin(geminiApiKey)],
+    plugins: [react(), tailwindcss(), localApiPlugin(apiKey)],
   };
 });
