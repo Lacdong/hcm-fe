@@ -46,32 +46,22 @@ function getApiKeyConfigError(apiKey) {
   return "";
 }
 
-export default {
-  async fetch(request) {
-    if (request.method !== "POST") {
-      return jsonResponse(405, { error: "Method not allowed" });
-    }
+async function handleGeminiRequest(apiKey, question) {
+  const apiKeyConfigError = getApiKeyConfigError(apiKey);
+  if (apiKeyConfigError) {
+    return { status: 500, body: { error: apiKeyConfigError } };
+  }
 
-    const apiKey = getGeminiApiKey();
-    const apiKeyConfigError = getApiKeyConfigError(apiKey);
+  if (!question) {
+    return { status: 400, body: { error: "Question is required" } };
+  }
 
-    if (apiKeyConfigError) {
-      return jsonResponse(500, { error: apiKeyConfigError });
-    }
+  if (question.length > MAX_QUESTION_LENGTH) {
+    return { status: 400, body: { error: "Question is too long" } };
+  }
 
-    const body = await request.json().catch(() => ({}));
-    const question = String(body.question || "").trim();
-
-    if (!question) {
-      return jsonResponse(400, { error: "Question is required" });
-    }
-
-    if (question.length > MAX_QUESTION_LENGTH) {
-      return jsonResponse(400, { error: "Question is too long" });
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-    const prompt = `
+  const ai = new GoogleGenAI({ apiKey });
+  const prompt = `
 ${aiSystemContext}
 
 Cau hoi cua nguoi dung:
@@ -85,16 +75,64 @@ Yeu cau tra loi:
 - Neu khong chac chan, hay noi can kiem chung them tu nguon chinh thong.
 `;
 
-    try {
-      const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
+  const FALLBACK_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+  ];
 
-      return jsonResponse(200, { answer: result.text });
+  let lastError = null;
+
+  for (const model of FALLBACK_MODELS) {
+    try {
+      const result = await ai.models.generateContent({ model, contents: prompt });
+      return { status: 200, body: { answer: result.text } };
     } catch (error) {
-      console.error("Gemini request failed", error);
-      return jsonResponse(502, { error: getGeminiErrorMessage(error) });
+      lastError = error;
+      const isOverloaded =
+        String(error?.message || "").includes("high demand") ||
+        String(error?.message || "").includes("UNAVAILABLE") ||
+        error?.status === 503;
+
+      if (isOverloaded) {
+        console.warn(`Model ${model} overloaded, switching to next fallback...`);
+        continue;
+      }
+
+      console.error(`Gemini request failed on model ${model}`, error);
+      return { status: 502, body: { error: getGeminiErrorMessage(error) } };
     }
+  }
+
+  console.error("All Gemini models overloaded", lastError);
+  return { status: 503, body: { error: "Tat ca model Gemini dang qua tai, vui long thu lai sau." } };
+}
+
+// ─── Vercel Serverless Function handler (dùng khi deploy) ───────────────────
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const question = String(req.body?.question || "").trim();
+  const apiKey = getGeminiApiKey();
+  const { status, body } = await handleGeminiRequest(apiKey, question);
+
+  return res.status(status).json(body);
+}
+
+// ─── Vite dev middleware handler (dùng khi chạy localhost) ───────────────────
+export const devFetch = {
+  async fetch(request) {
+    if (request.method !== "POST") {
+      return jsonResponse(405, { error: "Method not allowed" });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const question = String(body.question || "").trim();
+    const apiKey = getGeminiApiKey();
+    const { status, body: resBody } = await handleGeminiRequest(apiKey, question);
+
+    return jsonResponse(status, resBody);
   },
 };
