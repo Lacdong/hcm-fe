@@ -13,12 +13,21 @@ const GEMINI_MODELS = [
 
 // OpenRouter models thu lan luot khi Gemini that bai hoan toan
 const OPENROUTER_MODELS = [
-  "nvidia/nemotron-3-super-120b-a12b:free",
+  "qwen/qwen3-8b:free",
   "mistralai/mistral-7b-instruct:free",
 ];
 
 function jsonResponse(status, payload) {
   return Response.json(payload, { status });
+}
+
+// Loai bo ky tu la: chi giu lai Unicode Latin, tieng Viet, dau cau, so, xuat dong
+function sanitizeAnswer(text) {
+  return text
+    // Giu: Latin + dau viet + cac dau cau pho bien + khoang trang + so
+    .replace(/[^\u0000-\u007F\u00C0-\u024F\u1E00-\u1EFF\u0300-\u036F\n\r\t !"#%&'()*+,\-./:;<=>?@[\\\]^_`{|}~0-9]/g, "")
+    .replace(/\n{3,}/g, "\n\n") // gop nhieu dong trong lai
+    .trim();
 }
 
 function isTransientError(error, httpStatus) {
@@ -129,7 +138,7 @@ Cau hoi cua nguoi dung:
 ${question}
 
 Yeu cau tra loi (bat buoc):
-- Ngon ngu: TIENG VIET (bat buoc, khong duoc dung tieng Anh).
+- Ngon ngu: TIENG VIET (bat buoc, khong duoc dung tieng Anh, tieng trung, tieng nhat v.v).
 - Trinh bay ngan gon, ro y.
 - Uu tien gach dau dong neu cau tra loi co nhieu y.
 - Khong tra loi lan man.
@@ -144,6 +153,6 @@ Yeu cau tra loi (bat buoc):
       return jsonResponse(503, { error: "Tat ca AI dang qua tai hoac gap loi, vui long thu lai sau." });
     }
 
-    return jsonResponse(200, { answer });
+    return jsonResponse(200, { answer: sanitizeAnswer(answer) });
   },
 };
