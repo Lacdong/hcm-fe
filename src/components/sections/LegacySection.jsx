@@ -70,30 +70,36 @@ function LegacySection() {
             {memorialSitesData.map((item) => (
               <div
                 key={item.id}
-                className="rounded-3xl border border-yellow-700/20 bg-[#fffaf0] p-6"
+                className="overflow-hidden rounded-3xl border border-yellow-700/20 bg-[#fffaf0] shadow-lg shadow-red-950/5 transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
               >
-                <div className="flex gap-5">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-red-950 text-yellow-100">
-                    <Landmark size={26} />
-                  </div>
+                <div className="aspect-[16/9] overflow-hidden bg-red-950">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover object-center transition duration-500 hover:scale-105"
+                  />
+                </div>
 
-                  <div>
-                    <h4 className="text-xl font-bold text-red-950">
-                      {item.title}
-                    </h4>
+                <div className="p-6">
+                  <div className="flex items-start gap-5">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-950 text-yellow-100">
+                      <Landmark size={24} />
+                    </div>
 
-                    <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-yellow-700">
-                      <MapPin size={16} />
-                      {item.location}
-                    </p>
+                    <div>
+                      <h4 className="text-xl font-bold text-red-950">
+                        {item.title}
+                      </h4>
 
-                    <p className="mt-4 leading-7 text-stone-600">
-                      {item.description}
-                    </p>
+                      <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-yellow-700">
+                        <MapPin size={16} />
+                        {item.location}
+                      </p>
 
-                    <p className="mt-4 break-all rounded-2xl bg-white px-4 py-3 text-xs text-stone-500">
-                      {item.image}
-                    </p>
+                      <p className="mt-4 leading-7 text-stone-600">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

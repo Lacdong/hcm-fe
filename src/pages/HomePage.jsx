@@ -1,6 +1,6 @@
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-
+import AIChatSection from "../components/ai/AIChatSection";
 import HeroSection from "../components/sections/HeroSection";
 import BiographySection from "../components/sections/BiographySection";
 import TimelineSection from "../components/sections/TimelineSection";
@@ -17,6 +17,7 @@ import LegacySection from "../components/sections/LegacySection";
 import ContributionRadarSection from "../components/sections/ContributionRadarSection";
 import BackToTop from "../components/common/BackToTop";
 import ToolSupportSection from "../components/sections/ToolSupportSection";
+import AIChatBubble from "../components/ai/AIChatBubble";
 function HomePage() {
   return (
     <div className="min-h-screen bg-[#f7f1e5] text-stone-800">
@@ -29,6 +30,7 @@ function HomePage() {
         <JourneySection />
         <PhilosophySection />
         <MindMapSection />
+        <AIChatSection />
         <CareerSection />
         <IdeologySection />
         <WorksSection />
@@ -42,6 +44,7 @@ function HomePage() {
 
       <Footer />
       <BackToTop />
+      <AIChatBubble />
     </div>
   );
 }

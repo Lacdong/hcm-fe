@@ -4,6 +4,7 @@ export const contributionRadarMembers = [
     name: "Lê Hồ Lạc Đông",
     studentID: "SE185081",
     role: "Developer",
+    overallProgress: 100,
     summary:
       "Phụ trách xây dựng cấu trúc dự án ReactJS, phát triển các section chính và tối ưu giao diện responsive.",
     tasks: [
@@ -25,6 +26,7 @@ export const contributionRadarMembers = [
     name: "Trần Tô Thái Hà",
     studentID: "SS180950",
     role: "Content Researcher",
+    overallProgress: 100,
     summary:
       "Phụ trách nghiên cứu nội dung lịch sử, tổng hợp tư liệu và biên soạn dữ liệu cho các section của website.",
     tasks: [
@@ -46,6 +48,7 @@ export const contributionRadarMembers = [
     name: "Trần Hải Đăng",
     studentID: "SE181926",
     role: "UI/UX Designer",
+    overallProgress: 100,
     summary:
       "Phụ trách định hướng giao diện, bố cục trình bày, thẩm mỹ thị giác và chuẩn bị tài nguyên hình ảnh.",
     tasks: [
@@ -67,6 +70,7 @@ export const contributionRadarMembers = [
     name: "Nguyễn Minh Quang",
     studentID: "SE181573",
     role: "Feature Developer",
+    overallProgress: 100,
     summary:
       "Phụ trách các tính năng nâng cao như mindmap, quiz, logic xử lý dữ liệu và hỗ trợ kiểm thử sản phẩm.",
     tasks: [

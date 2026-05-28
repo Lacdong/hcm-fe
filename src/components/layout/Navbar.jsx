@@ -37,6 +37,18 @@ const navItems = [
     label: "Quiz",
     href: "#quiz",
   },
+   {
+    label: "Di sản & Tưởng niệm",
+    href: "#legacy",
+  },
+  {
+    label: "Thành viên",
+    href: "#contribution-radar",
+  },
+  {
+    label: "Công cụ",
+    href: "#tool-support",
+  },
 ];
 
 function Navbar() {

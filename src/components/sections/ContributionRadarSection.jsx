@@ -22,6 +22,7 @@ function CustomRadarTooltip({ active, payload, label }) {
   return (
     <div className="rounded-2xl border border-yellow-700/20 bg-white px-4 py-3 shadow-lg">
       <p className="text-sm font-bold text-red-950">{label}</p>
+
       <p className="mt-1 text-sm text-stone-600">
         Mức độ đóng góp:{" "}
         <span className="font-semibold text-yellow-700">
@@ -34,12 +35,12 @@ function CustomRadarTooltip({ active, payload, label }) {
 
 function ContributionRadarSection() {
   const [selectedMemberId, setSelectedMemberId] = useState(
-    contributionRadarMembers[0]?.id
+    contributionRadarMembers[0]?.id,
   );
 
   const selectedMember = useMemo(() => {
     return contributionRadarMembers.find(
-      (member) => member.id === selectedMemberId
+      (member) => member.id === selectedMemberId,
     );
   }, [selectedMemberId]);
 
@@ -81,9 +82,15 @@ function ContributionRadarSection() {
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-yellow-700">
                 Radar Overview
               </p>
+
               <h3 className="mt-2 text-2xl font-bold text-red-950">
                 {selectedMember.name}
               </h3>
+
+              <p className="mt-1 text-sm font-semibold text-stone-500">
+                MSSV: {selectedMember.studentID}
+              </p>
+
               <p className="mt-1 text-sm font-semibold text-stone-500">
                 {selectedMember.role}
               </p>
@@ -93,16 +100,26 @@ function ContributionRadarSection() {
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={selectedMember.metrics}>
                   <PolarGrid stroke="#d6a738" strokeOpacity={0.45} />
+
                   <PolarAngleAxis
                     dataKey="subject"
-                    tick={{ fill: "#7c2d12", fontSize: 12, fontWeight: 600 }}
+                    tick={{
+                      fill: "#7c2d12",
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
                   />
+
                   <PolarRadiusAxis
                     angle={90}
                     domain={[0, 5]}
                     tickCount={6}
-                    tick={{ fill: "#78716c", fontSize: 11 }}
+                    tick={{
+                      fill: "#78716c",
+                      fontSize: 11,
+                    }}
                   />
+
                   <Radar
                     name="Contribution"
                     dataKey="value"
@@ -111,9 +128,47 @@ function ContributionRadarSection() {
                     fillOpacity={0.35}
                     strokeWidth={2.5}
                   />
+
                   <Tooltip content={<CustomRadarTooltip />} />
                 </RadarChart>
               </ResponsiveContainer>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-yellow-700/20 bg-[#fffaf0] p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.25em] text-yellow-700">
+                    Overall Contribution
+                  </p>
+
+                  <p className="mt-1 text-lg font-bold text-red-950">
+                    Tổng mức đóng góp
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-red-950">
+                    {selectedMember.overallProgress}%
+                  </p>
+
+                  <p className="text-xs font-semibold text-stone-500">
+                    Hoàn thành
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 h-4 overflow-hidden rounded-full bg-red-950/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-red-900 to-yellow-700 transition-all duration-700"
+                  style={{ width: `${selectedMember.overallProgress}%` }}
+                />
+              </div>
+
+              <div className="mt-3 flex justify-between text-xs font-semibold text-stone-500">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
             </div>
           </div>
 
@@ -127,7 +182,11 @@ function ContributionRadarSection() {
                 {selectedMember.name}
               </h3>
 
-              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">
+              <p className="mt-2 text-sm font-semibold text-stone-500">
+                MSSV: {selectedMember.studentID}
+              </p>
+
+              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-yellow-700">
                 {selectedMember.role}
               </p>
 
@@ -163,6 +222,7 @@ function ContributionRadarSection() {
                 {contributionCriteria.map((item) => (
                   <div key={item.label} className="rounded-2xl bg-white p-4">
                     <p className="font-bold text-red-950">{item.label}</p>
+
                     <p className="mt-1 text-sm leading-6 text-stone-600">
                       {item.description}
                     </p>
