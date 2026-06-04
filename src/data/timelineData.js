@@ -277,8 +277,8 @@ export const timelineData = [
   {
     id: 26,
     period: "1946 - 1969",
-    year: "1969",
-    date: "1969",
+    year: "1965 - 1969",
+    date: "1965 - 1969",
     title: "Viết Di chúc",
     location: "Hà Nội",
     category: "Di sản tư tưởng",
