@@ -1,36 +1,19 @@
-import { GoogleGenAI } from "@google/genai";
-
-import { aiSystemContext } from "../data/aiContextData";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-const ai = new GoogleGenAI({
-  apiKey,
-});
-
 export async function askGemini(userQuestion) {
-  if (!apiKey) {
-    throw new Error("Thiếu VITE_GEMINI_API_KEY trong file .env");
-  }
-
-  const prompt = `
-${aiSystemContext}
-
-Câu hỏi của người dùng:
-${userQuestion}
-
-Yêu cầu trả lời:
-- Trả lời bằng tiếng Việt.
-- Trình bày ngắn gọn, rõ ý.
-- Ưu tiên gạch đầu dòng nếu câu trả lời có nhiều ý.
-- Không trả lời lan man.
-- Nếu không chắc chắn, hãy nói cần kiểm chứng thêm từ nguồn chính thống.
-`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
+  const response = await fetch("/api/gemini", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      question: userQuestion,
+    }),
   });
 
-  return response.text;
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || "Khong the goi Gemini API");
+  }
+
+  return payload.answer;
 }
